@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#40c9c2">
+<title>Nan's Kitchen</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f2fbfa;
+  color: #263b3a;
+}
+
+header {
+  background: linear-gradient(135deg, #40c9c2, #20a99f);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 38px;
+  margin: 0 0 8px;
+}
+
+header p {
+  font-size: 18px;
+  margin: 0;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  font-size: 18px;
+  border: 2px solid #c5eeeb;
+  border-radius: 14px;
+  background: white;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  padding: 14px 18px;
+}
+
+.search button {
+  background: #24b5ac;
+  color: white;
+}
+
+.categories {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+  overflow-x: auto;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.category {
+  background: white;
+  color: #278e87;
+  border: 2px solid #c5eeeb;
+  white-space: nowrap;
+}
+
+.category.active {
+  background: #26b6ad;
+  color: white;
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 10px 20px 50px;
+}
+
+h2 {
+  font-size: 27px;
+  margin-top: 20px;
+}
+
+.recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.recipe {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+}
+
+.recipe img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  background: #d9f4f1;
+}
+
+.recipe-content {
+  padding: 16px;
+}
+
+.recipe h3 {
+  font-size: 21px;
+  margin: 0 0 12px;
+}
+
+.recipe-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.view {
+  flex: 1;
+  background: #27b6ad;
+  color: white;
+}
+
+.fav {
+  background: #fff0f0;
+  color: #e34e68;
+  font-size: 23px;
+  padding: 10px 14px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 10px;
+  font-size: 20px;
+  color: #648582;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0,0,0,0.55);
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.modal-content {
+  max-width: 750px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.modal img {
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  border-radius: 15px;
+}
+
+.modal h2 {
+  margin-top: 15px;
+}
+
+.modal h3 {
+  font-size: 23px;
+  margin-top: 25px;
+}
+
+.modal p, .modal li {
+  font-size: 19px;
+  line-height: 1.7;
+}
+
+.close {
+  background: #e7f7f5;
+  color: #237e78;
+  float: right;
+  font-size: 18px;
+}
+
+footer {
+  text-align: center;
+  color: #7c9996;
+  padding: 30px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🍲 Nan's Kitchen</h1>
+  <p>Delicious recipes made simple ❤️</p>
+</header>
+
+<div class="search">
+  <input id="searchInput" placeholder="🔍 Search recipes..." onkeydown="if(event.key==='Enter')searchRecipes()">
+  <button onclick="searchRecipes()">Search</button>
+</div>
+
+<div class="categories" id="categories"></div>
+
+<main>
+  <h2 id="heading">🍽️ Recipes</h2>
+  <div class="recipes" id="recipes"></div>
+</main>
+
+<footer>
+  Made with ❤️ for Nan
+</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" onclick="closeRecipe()">✖ Close</button>
+    <div id="recipeDetails"></div>
+  </div>
+</div>
+
+<script>
+const categoryList = [
+  "All",
+  "Breakfast",
+  "Chicken",
+  "Beef",
+  "Seafood",
+  "Vegetarian",
+  "Pasta",
+  "Desserts",
+  "Vegan",
+  "Sides",
+  "Favourites"
+];
+
+let currentCategory = "All";
+let recipes = [];
+let favourites = JSON.parse(localStorage.getItem("nanFavs") || "[]");
+
+const categoryBox = document.getElementById("categories");
+
+categoryList.forEach(cat => {
+  const button = document.createElement("button");
+  button.className = "category";
+  button.textContent = cat;
+  button.onclick = () => chooseCategory(cat);
+  categoryBox.appendChild(button);
+});
+
+function updateCategoryButtons() {
+  document.querySelectorAll(".category").forEach(btn => {
+    btn.classList.toggle("active", btn.textContent === currentCategory);
+  });
+}
+
+function chooseCategory(cat) {
+  currentCategory = cat;
+  updateCategoryButtons();
+
+  if (cat === "Favourites") {
+    showFavourites();
+  } else if (cat === "All") {
+    searchRecipes();
+  } else {
+    loadCategory(cat);
+  }
+}
+
+async function searchRecipes() {
+  currentCategory = "All";
+  updateCategoryButtons();
+
+  const query = document.getElementById("searchInput").value.trim();
+
+  if (!query) {
+    loadHome();
+    return;
+  }
+
+  document.getElementById("heading").textContent = "🔍 Search results";
+  document.getElementById("recipes").innerHTML = "<div class='empty'>Searching...</div>";
+
+  try {
+    const response = await fetch(
+      "https://www.themealdb.com/api/json/v1/1/search.php?s=" + encodeURIComponent(query)
+    );
+    const data = await response.json();
+    displayRecipes(data.meals || []);
+  } catch {
+    document.getElementById("recipes").innerHTML = "<div class='empty'>Couldn't load recipes. Please try again.</div>";
+  }
+}
+
+async function loadCategory(cat) {
+  document.getElementById("heading").textContent = "🍽️ " + cat;
+  document.getElementById("recipes").innerHTML = "<div class='empty'>Loading recipes...</div>";
+
+  let apiCategory = cat;
+
+  if (cat === "Desserts") apiCategory = "Dessert";
+  if (cat === "Seafood") apiCategory = "Seafood";
+  if (cat === "Sides") apiCategory = "Side";
+  if (cat === "Vegan") apiCategory = "Vegan";
+
+  try {
+    const response = await fetch(
+      "https://www.themealdb.com/api/json/v1/1/filter.php?c=" + encodeURIComponent(apiCategory)
+    );
+    const data = await response.json();
+    displayRecipes(data.meals || []);
+  } catch {
+    document.getElementById("recipes").innerHTML = "<div class='empty'>Couldn't load recipes.</div>";
+  }
+}
+
+async function loadHome() {
+  document.getElementById("heading").textContent = "🌟 Popular recipes";
+  document.getElementById("recipes").innerHTML = "<div class='empty'>Loading delicious recipes...</div>";
+
+  try {
+    const searches = ["chicken", "pasta", "cake"];
+    const results = await Promise.all(
+      searches.map(s =>
+        fetch("https://www.themealdb.com/api/json/v1/1/search.php?s=" + s)
+          .then(r => r.json())
+      )
+    );
+
+    let combined = [];
+    results.forEach(r => {
+      if (r.meals) combined = combined.concat(r.meals);
+    });
+
+    const unique = [...new Map(combined.map(m => [m.idMeal, m])).values()];
+    displayRecipes(unique);
+  } catch {
+    document.getElementById("recipes").innerHTML = "<div class='empty'>Couldn't load recipes.</div>";
+  }
+}
+
+function displayRecipes(meals) {
+  recipes = meals;
+
+  const container = document.getElementById("recipes");
+  container.innerHTML = "";
+
+  if (!meals.length) {
+    container.innerHTML = "<div class='empty'>No recipes found. Try another search.</div>";
+    return;
+  }
+
+  meals.forEach(meal => {
+    const isFav = favourites.includes(meal.idMeal);
+
+    const card = document.createElement("div");
+    card.className = "recipe";
+
+    card.innerHTML = `
+      <img src="${meal.strMealThumb || ""}" alt="">
+      <div class="recipe-content">
+        <h3>${escapeHTML(meal.strMeal || "Recipe")}</h3>
+        <div class="recipe-actions">
+          <button class="view">View Recipe</button>
+          <button class="fav">${isFav ? "❤️" : "🤍"}</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector(".view").onclick = () => openRecipe(meal.idMeal);
+    card.querySelector(".fav").onclick = () => toggleFavourite(meal.idMeal);
+
+    container.appendChild(card);
+  });
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+async function openRecipe(id) {
+  document.getElementById("modal").style.display = "block";
+  document.getElementById("recipeDetails").innerHTML = "<p>Loading recipe...</p>";
+
+  try {
+    const response = await fetch(
+      "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id
+    );
+    const data = await response.json();
+    const meal = data.meals && data.meals[0];
+
+    if (!meal) throw new Error();
+
+    let ingredients = "";
+
+    for (let i = 1; i <= 20; i++) {
+      const ingredient = meal["strIngredient" + i];
+      const measure = meal["strMeasure" + i];
+
+      if (ingredient && ingredient.trim()) {
+        ingredients += `<li>${escapeHTML(measure || "")} ${escapeHTML(ingredient)}</li>`;
+      }
+    }
+
+    document.getElementById("recipeDetails").innerHTML = `
+      <img src="${meal.strMealThumb}" alt="">
+      <h2>${escapeHTML(meal.strMeal)}</h2>
+      <p><b>${escapeHTML(meal.strArea || "")}</b> · ${escapeHTML(meal.strCategory || "")}</p>
+      <h3>🧺 Ingredients</h3>
+      <ul>${ingredients}</ul>
+      <h3>👩‍🍳 Instructions</h3>
+      <p>${escapeHTML(meal.strInstructions || "").replace(/\r?\n/g, "<br>")}</p>
+      ${meal.strYoutube ? `<p><a href="${meal.strYoutube}" target="_blank">▶ Watch cooking video</a></p>` : ""}
+    `;
+  } catch {
+    document.getElementById("recipeDetails").innerHTML = "<p>Sorry, couldn't load this recipe.</p>";
+  }
+}
+
+function closeRecipe() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function toggleFavourite(id) {
+  if (favourites.includes(id)) {
+    favourites = favourites.filter(x => x !== id);
+  } else {
+    favourites.push(id);
+  }
+
+  localStorage.setItem("nanFavs", JSON.stringify(favourites));
+
+  if (currentCategory === "Favourites") {
+    showFavourites();
+  } else {
+    displayRecipes(recipes);
+  }
+}
+
+async function showFavourites() {
+  document.getElementById("heading").textContent = "❤️ Nan's favourites";
+  document.getElementById("recipes").innerHTML = "<div class='empty'>Loading favourites...</div>";
+
+  if (!favourites.length) {
+    document.getElementById("recipes").innerHTML = "<div class='empty'>No favourites saved yet. Tap a heart on a recipe!</div>";
+    return;
+  }
+
+  try {
+    const meals = await Promise.all(
+      favourites.map(id =>
+        fetch("https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id)
+          .then(r => r.json())
+      )
+    );
+
+    displayRecipes(meals.map(x => x.meals && x.meals[0]).filter(Boolean));
+  } catch {
+    document.getElementById("recipes").innerHTML = "<div class='empty'>Couldn't load favourites.</div>";
+  }
+}
+
+updateCategoryButtons();
+loadHome();
+
+</script>
+</body>
+</html>
