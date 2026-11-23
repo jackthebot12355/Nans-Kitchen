@@ -1,22 +1,24 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#38bdb5">
+<meta name="description" content="Nan's Kitchen - discover recipes from around the world">
 <title>Nan's Kitchen</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg">
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1fbfa;color:#243b39}
-header{background:linear-gradient(135deg,#43cfc5,#159e96);color:white;padding:30px 20px;text-align:center}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f1fbfa;color:#263b3a}
+header{background:linear-gradient(135deg,#40c9c2,#159e96);color:white;padding:28px 18px;text-align:center}
 header h1{font-size:38px;margin:0}
-header p{font-size:19px}
+header p{font-size:19px;margin:10px 0 0}
 .search{display:flex;gap:10px;max-width:1000px;margin:auto;padding:20px}
-.search input{flex:1;min-width:0;padding:17px;font-size:20px;border:2px solid #c5eeeb;border-radius:15px}
-button{cursor:pointer;border:0;border-radius:13px;padding:14px 18px;font-size:18px}
-.search button{background:#169e96;color:white}
+.search input{flex:1;min-width:0;padding:17px;font-size:19px;border:2px solid #c5eeeb;border-radius:15px;background:white}
+button{cursor:pointer;border:0;border-radius:13px;padding:14px 18px;font-size:17px}
+.search button{background:#159e96;color:white}
 .categories{display:flex;overflow-x:auto;gap:10px;padding:0 20px 20px}
 .category{white-space:nowrap;background:white;border:2px solid #c6eeeb;color:#168d86}
 .category.active{background:#20aaa2;color:white}
@@ -26,7 +28,7 @@ h2{font-size:28px}
 .recipe{background:white;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px #00000010}
 .recipe img{width:100%;height:210px;object-fit:cover;background:#d9f4f1}
 .recipe-content{padding:16px}
-.recipe h3{font-size:23px}
+.recipe h3{font-size:22px}
 .recipe-actions{display:flex;gap:10px}
 .view{flex:1;background:#20aaa2;color:white}
 .fav{background:#fff0f0;color:#e34e68;font-size:23px}
@@ -36,10 +38,10 @@ h2{font-size:28px}
 .modal img{width:100%;max-height:350px;object-fit:cover;border-radius:15px}
 .modal h2{margin-top:20px}
 .modal h3{font-size:24px;margin-top:25px}
-.modal p,.modal li{font-size:20px;line-height:1.7}
+.modal p,.modal li{font-size:19px;line-height:1.7}
 .close{background:#e7f7f5;color:#237e78;float:right}
 footer{text-align:center;padding:25px;color:#789795}
-.small{font-size:15px;color:#66817f}
+.status{text-align:center;font-size:14px;color:#66817f;padding:5px}
 </style>
 </head>
 
@@ -59,8 +61,9 @@ footer{text-align:center;padding:25px;color:#789795}
 
 <main>
 <h2 id="heading">🍽️ Recipes</h2>
-<p class="small">Search for almost anything you'd like to cook.</p>
+<p>Search for recipes from around the world.</p>
 <div class="recipes" id="recipes"></div>
+<div class="status" id="status"></div>
 </main>
 
 <footer>Made with ❤️ for Nan</footer>
@@ -74,335 +77,221 @@ footer{text-align:center;padding:25px;color:#789795}
 
 <script>
 const API="https://www.themealdb.com/api/json/v1/1/";
-
-const categoryList=[
-"All","British","Breakfast","Chicken","Beef","Seafood",
-"Vegetarian","Pasta","Desserts","Vegan","Sides","Favourites"
-];
-
 let currentCategory="All";
 let recipes=[];
 let favourites=JSON.parse(localStorage.getItem("nanFavs")||"[]");
 
+const categoryList=["All","British","Breakfast","Chicken","Beef","Seafood","Vegetarian","Pasta","Desserts","Vegan","Sides","Favourites"];
+
 const homemade=[
 {
-idMeal:"nan_scone_plain",
-strMeal:"Traditional Plain Scones",
-strCategory:"British",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Heat the oven to 220°C (200°C fan).\\n\\n2. Mix 350g self-raising flour with 1 teaspoon baking powder and a pinch of salt.\\n\\n3. Rub in 85g cold butter until the mixture resembles breadcrumbs.\\n\\n4. Stir in 3 tablespoons sugar.\\n\\n5. Add approximately 175ml milk gradually, mixing to make a soft dough.\\n\\n6. Turn onto a lightly floured surface and gently pat to about 3cm thick.\\n\\n7. Cut into rounds using a cutter.\\n\\n8. Place on a baking tray and brush the tops with milk.\\n\\n9. Bake for 12–15 minutes until risen and golden.\\n\\n10. Cool slightly and serve with jam and cream.",
-strIngredient1:"Self-raising flour",strMeasure1:"350g",
-strIngredient2:"Baking powder",strMeasure2:"1 teaspoon",
-strIngredient3:"Salt",strMeasure3:"A pinch",
-strIngredient4:"Cold butter",strMeasure4:"85g",
-strIngredient5:"Sugar",strMeasure5:"3 tablespoons",
-strIngredient6:"Milk",strMeasure6:"175ml approximately"
+idMeal:"nan_scone_plain",strMeal:"Traditional Plain Scones",strCategory:"British",strArea:"British",strMealThumb:"",
+strInstructions:"1. Heat oven to 220°C (200°C fan).\\n\\n2. Mix 350g self-raising flour with 1 teaspoon baking powder and a pinch of salt.\\n\\n3. Rub in 85g cold butter until breadcrumbs form.\\n\\n4. Stir in 3 tablespoons sugar.\\n\\n5. Add approximately 175ml milk gradually to make a soft dough.\\n\\n6. Pat dough to about 3cm thick on a floured surface.\\n\\n7. Cut into rounds.\\n\\n8. Brush with milk.\\n\\n9. Bake for 12–15 minutes until golden.\\n\\n10. Cool and serve with jam and cream.",
+strIngredient1:"Self-raising flour",strMeasure1:"350g",strIngredient2:"Baking powder",strMeasure2:"1 teaspoon",strIngredient3:"Salt",strMeasure3:"A pinch",strIngredient4:"Cold butter",strMeasure4:"85g",strIngredient5:"Sugar",strMeasure5:"3 tablespoons",strIngredient6:"Milk",strMeasure6:"175ml"
 },
 {
-idMeal:"nan_scone_fruit",
-strMeal:"Fruit Scones",
-strCategory:"British",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Preheat the oven to 220°C (200°C fan).\\n\\n2. Mix 350g self-raising flour and a pinch of salt.\\n\\n3. Rub 85g cold butter into the flour.\\n\\n4. Stir in 3 tablespoons sugar and 100g raisins or sultanas.\\n\\n5. Gradually add approximately 175ml milk until a soft dough forms.\\n\\n6. Pat the dough to about 3cm thick on a floured surface.\\n\\n7. Cut into rounds.\\n\\n8. Brush with milk.\\n\\n9. Bake for 12–15 minutes until golden.\\n\\n10. Cool and serve.",
-strIngredient1:"Self-raising flour",strMeasure1:"350g",
-strIngredient2:"Cold butter",strMeasure2:"85g",
-strIngredient3:"Salt",strMeasure3:"A pinch",
-strIngredient4:"Sugar",strMeasure4:"3 tablespoons",
-strIngredient5:"Raisins or sultanas",strMeasure5:"100g",
-strIngredient6:"Milk",strMeasure6:"175ml approximately"
+idMeal:"nan_scone_fruit",strMeal:"Fruit Scones",strCategory:"British",strArea:"British",strMealThumb:"",
+strInstructions:"1. Preheat oven to 220°C (200°C fan).\\n\\n2. Mix 350g self-raising flour and a pinch of salt.\\n\\n3. Rub 85g butter into the flour.\\n\\n4. Stir in 3 tablespoons sugar and 100g raisins or sultanas.\\n\\n5. Gradually add approximately 175ml milk.\\n\\n6. Pat dough to about 3cm thick.\\n\\n7. Cut into rounds.\\n\\n8. Brush with milk.\\n\\n9. Bake for 12–15 minutes until golden.",
+strIngredient1:"Self-raising flour",strMeasure1:"350g",strIngredient2:"Cold butter",strMeasure2:"85g",strIngredient3:"Salt",strMeasure3:"A pinch",strIngredient4:"Sugar",strMeasure4:"3 tablespoons",strIngredient5:"Raisins or sultanas",strMeasure5:"100g",strIngredient6:"Milk",strMeasure6:"175ml"
 },
 {
-idMeal:"nan_scone_cheese",
-strMeal:"Cheese Scones",
-strCategory:"British",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Heat the oven to 220°C (200°C fan).\\n\\n2. Mix 225g self-raising flour with a pinch of salt and half a teaspoon of mustard powder if desired.\\n\\n3. Rub 55g butter into the flour.\\n\\n4. Stir in 100g grated mature cheddar.\\n\\n5. Add approximately 150ml milk and mix into a soft dough.\\n\\n6. Pat the dough onto a floured surface, about 2cm thick.\\n\\n7. Cut into rounds.\\n\\n8. Brush with milk and sprinkle with extra cheese if desired.\\n\\n9. Bake for 12–15 minutes until risen and golden.",
-strIngredient1:"Self-raising flour",strMeasure1:"225g",
-strIngredient2:"Butter",strMeasure2:"55g",
-strIngredient3:"Mature cheddar",strMeasure3:"100g grated",
-strIngredient4:"Milk",strMeasure4:"150ml approximately",
-strIngredient5:"Salt",strMeasure5:"A pinch",
-strIngredient6:"Mustard powder",strMeasure6:"Optional, 1/2 teaspoon"
+idMeal:"nan_scone_cheese",strMeal:"Cheese Scones",strCategory:"British",strArea:"British",strMealThumb:"",
+strInstructions:"1. Heat oven to 220°C (200°C fan).\\n\\n2. Mix 225g self-raising flour with a pinch of salt.\\n\\n3. Rub 55g butter into the flour.\\n\\n4. Stir in 100g grated mature cheddar.\\n\\n5. Add approximately 150ml milk.\\n\\n6. Pat dough onto a floured surface, about 2cm thick.\\n\\n7. Cut into rounds.\\n\\n8. Brush with milk and sprinkle with cheese if desired.\\n\\n9. Bake for 12–15 minutes until golden.",
+strIngredient1:"Self-raising flour",strMeasure1:"225g",strIngredient2:"Butter",strMeasure2:"55g",strIngredient3:"Mature cheddar",strMeasure3:"100g",strIngredient4:"Milk",strMeasure4:"150ml",strIngredient5:"Salt",strMeasure5:"A pinch"
 },
 {
-idMeal:"nan_pancakes",
-strMeal:"Easy Pancakes",
-strCategory:"Breakfast",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Mix 100g plain flour with 2 eggs.\\n\\n2. Gradually whisk in 300ml milk.\\n\\n3. Heat a lightly oiled frying pan.\\n\\n4. Pour in a thin layer of batter.\\n\\n5. Cook until the underside is golden, then flip.\\n\\n6. Cook the other side and serve.",
-strIngredient1:"Plain flour",strMeasure1:"100g",
-strIngredient2:"Eggs",strMeasure2:"2",
-strIngredient3:"Milk",strMeasure3:"300ml",
-strIngredient4:"Oil",strMeasure4:"For frying"
+idMeal:"nan_pancakes",strMeal:"Easy Pancakes",strCategory:"Breakfast",strArea:"British",strMealThumb:"",
+strInstructions:"1. Mix 100g plain flour with 2 eggs.\\n\\n2. Gradually whisk in 300ml milk.\\n\\n3. Heat a lightly oiled frying pan.\\n\\n4. Pour in a thin layer of batter.\\n\\n5. Cook until golden underneath, then flip.\\n\\n6. Cook the other side and serve.",
+strIngredient1:"Plain flour",strMeasure1:"100g",strIngredient2:"Eggs",strMeasure2:"2",strIngredient3:"Milk",strMeasure3:"300ml",strIngredient4:"Oil",strMeasure4:"For frying"
 },
 {
-idMeal:"nan_apple_crumble",
-strMeal:"Easy Apple Crumble",
-strCategory:"Desserts",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Preheat oven to 180°C.\\n\\n2. Peel and slice 5 apples. Put into a baking dish with 2 tablespoons sugar.\\n\\n3. Rub 150g flour and 100g butter together until crumbly.\\n\\n4. Stir in 75g sugar.\\n\\n5. Sprinkle the crumble over the apples.\\n\\n6. Bake for about 35–40 minutes until golden.\\n\\n7. Serve warm.",
-strIngredient1:"Apples",strMeasure1:"5",
-strIngredient2:"Plain flour",strMeasure2:"150g",
-strIngredient3:"Butter",strMeasure3:"100g",
-strIngredient4:"Sugar",strMeasure4:"75g for topping",
-strIngredient5:"Sugar",strMeasure5:"2 tablespoons for apples"
+idMeal:"nan_crumble",strMeal:"Easy Apple Crumble",strCategory:"Desserts",strArea:"British",strMealThumb:"",
+strInstructions:"1. Preheat oven to 180°C.\\n\\n2. Peel and slice 5 apples.\\n\\n3. Place apples in a baking dish with 2 tablespoons sugar.\\n\\n4. Rub 150g flour and 100g butter together.\\n\\n5. Stir in 75g sugar.\\n\\n6. Sprinkle crumble mixture over apples.\\n\\n7. Bake for 35–40 minutes until golden.",
+strIngredient1:"Apples",strMeasure1:"5",strIngredient2:"Plain flour",strMeasure2:"150g",strIngredient3:"Butter",strMeasure3:"100g",strIngredient4:"Sugar",strMeasure4:"75g + 2 tablespoons"
 },
 {
-idMeal:"nan_yorkshire",
-strMeal:"Yorkshire Puddings",
-strCategory:"British",
-strArea:"British",
-strMealThumb:"",
-strInstructions:"1. Heat oven to 220°C.\\n\\n2. Mix 140g plain flour with 4 eggs.\\n\\n3. Gradually whisk in 200ml milk until smooth.\\n\\n4. Place a little oil into each muffin tin cup and heat in the oven.\\n\\n5. Carefully pour batter into the hot tins.\\n\\n6. Bake for 20–25 minutes without opening the oven until puffed and golden.",
-strIngredient1:"Plain flour",strMeasure1:"140g",
-strIngredient2:"Eggs",strMeasure2:"4",
-strIngredient3:"Milk",strMeasure3:"200ml",
-strIngredient4:"Oil",strMeasure4:"For the tins"
+idMeal:"nan_yorkshire",strMeal:"Yorkshire Puddings",strCategory:"British",strArea:"British",strMealThumb:"",
+strInstructions:"1. Heat oven to 220°C.\\n\\n2. Mix 140g flour, 4 eggs and 200ml milk into a smooth batter.\\n\\n3. Add oil to a muffin tin and heat in the oven.\\n\\n4. Pour batter into hot oil.\\n\\n5. Bake for 20–25 minutes without opening the oven.",
+strIngredient1:"Plain flour",strMeasure1:"140g",strIngredient2:"Eggs",strMeasure2:"4",strIngredient3:"Milk",strMeasure3:"200ml",strIngredient4:"Oil",strMeasure4:"For tin"
+},
+{
+idMeal:"nan_omelette",strMeal:"Cheese Omelette",strCategory:"Breakfast",strArea:"British",strMealThumb:"",
+strInstructions:"1. Beat 3 eggs with salt and pepper.\\n\\n2. Melt butter in a frying pan.\\n\\n3. Pour in the eggs.\\n\\n4. Gently stir until beginning to set.\\n\\n5. Add grated cheese.\\n\\n6. Fold and serve.",
+strIngredient1:"Eggs",strMeasure1:"3",strIngredient2:"Cheddar",strMeasure2:"50g",strIngredient3:"Butter",strMeasure3:"1 tablespoon",strIngredient4:"Salt and pepper",strMeasure4:"To taste"
+},
+{
+idMeal:"nan_tomato_soup",strMeal:"Homemade Tomato Soup",strCategory:"Vegetarian",strArea:"British",strMealThumb:"",
+strInstructions:"1. Chop 1 onion and 2 carrots.\\n\\n2. Fry gently in butter.\\n\\n3. Add 800g tomatoes and 500ml vegetable stock.\\n\\n4. Simmer for 25 minutes.\\n\\n5. Blend until smooth.\\n\\n6. Season and serve.",
+strIngredient1:"Tomatoes",strMeasure1:"800g",strIngredient2:"Onion",strMeasure2:"1",strIngredient3:"Carrots",strMeasure3:"2",strIngredient4:"Vegetable stock",strMeasure4:"500ml",strIngredient5:"Butter",strMeasure5:"25g"
 }
 ];
 
-const categoryBox=document.getElementById("categories");
-
-categoryList.forEach(cat=>{
-const button=document.createElement("button");
-button.className="category";
-button.textContent=cat;
-button.onclick=()=>chooseCategory(cat);
-categoryBox.appendChild(button);
-});
-
-function updateCategoryButtons(){
-document.querySelectorAll(".category").forEach(btn=>{
-btn.classList.toggle("active",btn.textContent===currentCategory);
-});
+function renderCategories(){
+document.getElementById("categories").innerHTML=categoryList.map(c=>`<button class="category ${c===currentCategory?"active":""}" onclick="setCategory('${c}')">${c}</button>`).join("");
 }
 
-function chooseCategory(cat){
-currentCategory=cat;
-updateCategoryButtons();
-
-if(cat==="Favourites")showFavourites();
-else if(cat==="All")loadHome();
-else if(cat==="British")searchRecipes("british");
-else loadCategory(cat);
+function setCategory(c){
+currentCategory=c;
+renderCategories();
+if(c==="All")loadHome();
+else if(c==="Favourites")showFavourites();
+else searchCategory(c);
 }
 
-function escapeHTML(text){
-return String(text||"").replace(/[&<>"']/g,char=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[char]));
-}
-
-async function searchRecipes(override){
-currentCategory="All";
-updateCategoryButtons();
-
-const query=(override||document.getElementById("searchInput").value).trim();
-
-if(!query){loadHome();return;}
-
-document.getElementById("heading").textContent="🔎 Results for: "+query;
-document.getElementById("recipes").innerHTML="<div class='empty'>Searching the recipe collection...</div>";
-
-const local=homemade.filter(m=>
-m.strMeal.toLowerCase().includes(query.toLowerCase())||
-m.strCategory.toLowerCase().includes(query.toLowerCase())||
-m.strArea.toLowerCase().includes(query.toLowerCase())||
-getIngredients(m).toLowerCase().includes(query.toLowerCase())
-);
-
-let online=[];
-
-try{
-const response=await fetch(API+"search.php?s="+encodeURIComponent(query));
-const data=await response.json();
-online=data.meals||[];
-}catch(e){}
-
-const combined=mergeMeals(local,online);
-displayRecipes(combined);
-
-if(!combined.length){
-document.getElementById("recipes").innerHTML=
-"<div class='empty'>No exact results. Try another word, such as an ingredient, dish name or cuisine.</div>";
-}
-}
-
-function getIngredients(meal){
-let list=[];
-for(let i=1;i<=20;i++){
-if(meal["strIngredient"+i])list.push(meal["strIngredient"+i]);
-}
-return list.join(" ");
-}
-
-function mergeMeals(a,b){
-return [...new Map([...a,...b].map(m=>[m.idMeal,m])).values()];
-}
-
-async function loadCategory(cat){
-document.getElementById("heading").textContent="🍽️ "+cat;
-document.getElementById("recipes").innerHTML="<div class='empty'>Loading...</div>";
-
-const local=homemade.filter(m=>m.strCategory.toLowerCase()===cat.toLowerCase());
-
-let online=[];
-try{
-let apiCat=cat;
-if(cat==="Sides")apiCat="Side";
-if(cat==="Desserts")apiCat="Dessert";
-
-const response=await fetch(API+"filter.php?c="+encodeURIComponent(apiCat));
-const data=await response.json();
-online=data.meals||[];
-}catch(e){}
-
-displayRecipes(mergeMeals(local,online));
-}
-
-async function loadHome(){
-currentCategory="All";
-updateCategoryButtons();
-
-document.getElementById("heading").textContent="🌟 Popular recipes";
-document.getElementById("recipes").innerHTML="<div class='empty'>Loading recipes...</div>";
-
-try{
-const searches=["chicken","pasta","cake","beef","soup"];
-const results=await Promise.all(searches.map(s=>
-fetch(API+"search.php?s="+s).then(r=>r.json())
-));
-
-let combined=homemade.slice();
-results.forEach(r=>{if(r.meals)combined=combined.concat(r.meals);});
-displayRecipes(mergeMeals([],combined));
-}catch(e){
-displayRecipes(homemade);
-}
-}
-
-function displayRecipes(meals){
-recipes=meals;
-const container=document.getElementById("recipes");
-container.innerHTML="";
-
-if(!meals.length){
-container.innerHTML="<div class='empty'>No recipes found.</div>";
-return;
-}
-
-meals.forEach(meal=>{
+function card(meal){
 const isFav=favourites.includes(meal.idMeal);
-const card=document.createElement("div");
-card.className="recipe";
-
-card.innerHTML=`
-${meal.strMealThumb?`<img src="${meal.strMealThumb}" alt="">`:""}
+return `<div class="recipe">
+<img src="${meal.strMealThumb||'https://placehold.co/600x400?text=Homemade+Recipe'}" loading="lazy" alt="${escapeHTML(meal.strMeal)}">
 <div class="recipe-content">
 <h3>${escapeHTML(meal.strMeal)}</h3>
 <div class="recipe-actions">
-<button class="view">View Recipe</button>
-<button class="fav">${isFav?"❤️":"🤍"}</button>
-</div>
-</div>`;
-
-card.querySelector(".view").onclick=()=>openRecipe(meal.idMeal);
-card.querySelector(".fav").onclick=()=>toggleFavourite(meal.idMeal);
-container.appendChild(card);
-});
+<button class="view" onclick="viewRecipe('${meal.idMeal}')">View recipe</button>
+<button class="fav" onclick="toggleFav('${meal.idMeal}')" aria-label="Favourite">${isFav?"❤️":"♡"}</button>
+</div></div></div>`;
 }
 
-async function openRecipe(id){
-document.getElementById("modal").style.display="block";
-document.getElementById("recipeDetails").innerHTML="<p>Loading recipe...</p>";
+function escapeHTML(s){
+return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 
-let meal=homemade.find(m=>m.idMeal===id);
+function showMeals(list,title){
+recipes=list||[];
+document.getElementById("heading").textContent=title;
+document.getElementById("recipes").innerHTML=recipes.length?recipes.map(card).join(""):`<div class="empty">No recipes found. Try another search.</div>`;
+}
 
-if(!meal){
+async function searchRecipes(){
+const q=document.getElementById("searchInput").value.trim();
+if(!q)return;
+currentCategory="All";
+renderCategories();
+document.getElementById("heading").textContent="🔎 Results for "+q;
+document.getElementById("status").textContent="Searching...";
 try{
-const response=await fetch(API+"lookup.php?i="+id);
-const data=await response.json();
-meal=data.meals&&data.meals[0];
+const r=await fetch(API+"search.php?s="+encodeURIComponent(q));
+const d=await r.json();
+const online=d.meals||[];
+const local=homemade.filter(m=>m.strMeal.toLowerCase().includes(q.toLowerCase())||Object.values(m).some(v=>typeof v==="string"&&v.toLowerCase().includes(q.toLowerCase())));
+const combined=[...local,...online.filter(m=>!local.some(l=>l.idMeal===m.idMeal))];
+showMeals(combined,"🔎 Results for "+q);
+document.getElementById("status").textContent=online.length?"Online recipes loaded.":"Showing matching homemade recipes.";
+}catch(e){
+const local=homemade.filter(m=>m.strMeal.toLowerCase().includes(q.toLowerCase())||Object.values(m).some(v=>typeof v==="string"&&v.toLowerCase().includes(q.toLowerCase())));
+showMeals(local,"🔎 Results for "+q);
+document.getElementById("status").textContent="Internet unavailable. Showing built-in recipes.";
+}
+}
+
+async function searchCategory(c){
+document.getElementById("heading").textContent=c+" recipes";
+document.getElementById("status").textContent="Loading...";
+try{
+const r=await fetch(API+"filter.php?c="+encodeURIComponent(c));
+const d=await r.json();
+const online=d.meals||[];
+showMeals([...homemade.filter(m=>m.strCategory===c),...online],"🍽️ "+c+" recipes");
+document.getElementById("status").textContent="";
+}catch(e){
+showMeals(homemade.filter(m=>m.strCategory===c),"🍽️ "+c+" recipes");
+document.getElementById("status").textContent="Showing built-in recipes.";
+}
+}
+
+async function loadHome(){
+document.getElementById("heading").textContent="🍽️ Discover recipes";
+document.getElementById("status").textContent="Loading recipes...";
+const queries=["chicken","pasta","cake","beef","soup","vegetarian"];
+let results=[...homemade];
+try{
+const fetched=await Promise.all(queries.map(q=>fetch(API+"search.php?s="+q).then(r=>r.json()).catch(()=>({meals:[]}))));
+fetched.forEach(d=>(d.meals||[]).forEach(m=>{if(!results.some(x=>x.idMeal===m.idMeal))results.push(m)}));
 }catch(e){}
+showMeals(results,"🍽️ Discover recipes");
+document.getElementById("status").textContent="";
 }
 
-if(!meal){
-document.getElementById("recipeDetails").innerHTML="<p>Couldn't load recipe.</p>";
-return;
-}
-
-let ingredients="";
-
-for(let i=1;i<=20;i++){
-const ingredient=meal["strIngredient"+i];
-const measure=meal["strMeasure"+i];
-if(ingredient&&ingredient.trim()){
-ingredients+=`<li>${escapeHTML(measure||"")} ${escapeHTML(ingredient)}</li>`;
+function showFavourites(){
+const list=homemade.concat(recipes).filter((m,i,a)=>favourites.includes(m.idMeal)&&a.findIndex(x=>x.idMeal===m.idMeal)===i);
+showMeals(list,"❤️ Your favourites");
+if(!list.length){
+document.getElementById("recipes").innerHTML='<div class="empty">You have not saved any favourites yet.</div>';
 }
 }
 
-document.getElementById("recipeDetails").innerHTML=`
-${meal.strMealThumb?`<img src="${meal.strMealThumb}" alt="">`:""}
-<h2>${escapeHTML(meal.strMeal)}</h2>
-<p><b>${escapeHTML(meal.strArea||"")}</b> · ${escapeHTML(meal.strCategory||"")}</p>
-<h3>🧺 Ingredients</h3>
-<ul>${ingredients}</ul>
-<h3>👩‍🍳 Instructions</h3>
-<p>${escapeHTML(meal.strInstructions||"").replace(/\r?\n/g,"<br>")}</p>
-${meal.strYoutube?`<p><a href="${meal.strYoutube}" target="_blank">▶ Watch cooking video</a></p>`:""}
-`;
-}
-
-function closeRecipe(){
-document.getElementById("modal").style.display="none";
-}
-
-function toggleFavourite(id){
-if(favourites.includes(id)){
-favourites=favourites.filter(x=>x!==id);
-}else{
-favourites.push(id);
-}
+function toggleFav(id){
+if(favourites.includes(id))favourites=favourites.filter(x=>x!==id);
+else favourites.push(id);
 localStorage.setItem("nanFavs",JSON.stringify(favourites));
-
-if(currentCategory==="Favourites"){
-showFavourites();
-}else{
-displayRecipes(recipes);
-}
+if(currentCategory==="Favourites")showFavourites();
+else showMeals(recipes,document.getElementById("heading").textContent);
 }
 
-async function showFavourites(){
-document.getElementById("heading").textContent="❤️ Nan's favourites";
-document.getElementById("recipes").innerHTML="<div class='empty'>Loading favourites...</div>";
-
-if(!favourites.length){
-document.getElementById("recipes").innerHTML="<div class='empty'>No favourites yet. Tap a heart on a recipe!</div>";
-return;
-}
-
-let meals=homemade.filter(m=>favourites.includes(m.idMeal));
-
-const remaining=favourites.filter(id=>!homemade.some(m=>m.idMeal===id));
-
+async function viewRecipe(id){
+let meal=homemade.find(m=>m.idMeal===id);
+if(!meal){
 try{
-const online=await Promise.all(remaining.map(id=>
-fetch(API+"lookup.php?i="+id).then(r=>r.json())
-));
-online.forEach(x=>{if(x.meals)meals.push(x.meals[0]);});
+const r=await fetch(API+"lookup.php?i="+id);
+const d=await r.json();
+meal=d.meals?.[0];
 }catch(e){}
-
-displayRecipes(meals);
+}
+if(!meal)return;
+const ingredients=[];
+for(let i=1;i<=20;i++){
+const name=meal["strIngredient"+i];
+const measure=meal["strMeasure"+i];
+if(name&&name.trim())ingredients.push(`<li>${escapeHTML(measure||"")} ${escapeHTML(name)}</li>`);
+}
+document.getElementById("recipeDetails").innerHTML=`
+<h2>${escapeHTML(meal.strMeal)}</h2>
+${meal.strMealThumb?`<img src="${meal.strMealThumb}" alt="">`:""}
+<h3>Ingredients</h3>
+<ul>${ingredients.join("")}</ul>
+<h3>Instructions</h3>
+<p>${escapeHTML(meal.strInstructions||"Instructions unavailable").replace(/\r?\n/g,"<br>")}</p>
+<button class="fav" onclick="toggleFav('${meal.idMeal}')">${favourites.includes(meal.idMeal)?"❤️ Remove favourite":"♡ Add favourite"}</button>`;
+document.getElementById("modal").style.display="block";
 }
 
-updateCategoryButtons();
+function closeRecipe(){document.getElementById("modal").style.display="none";}
+
+document.getElementById("modal").addEventListener("click",e=>{
+if(e.target.id==="modal")closeRecipe();
+});
+
+renderCategories();
 loadHome();
 
+/* AUTOMATIC UPDATE SYSTEM */
+if("serviceWorker" in navigator){
+window.addEventListener("load",async()=>{
+try{
+const registration=await navigator.serviceWorker.register("./sw.js");
+registration.update();
+
+registration.addEventListener("updatefound",()=>{
+const worker=registration.installing;
+if(worker){
+worker.addEventListener("statechange",()=>{
+if(worker.state==="installed"&&navigator.serviceWorker.controller){
+worker.postMessage("SKIP_WAITING");
+}
+});
+}
+});
+
+navigator.serviceWorker.addEventListener("controllerchange",()=>{
+if(!window.__reloaded){
+window.__reloaded=true;
+window.location.reload();
+}
+});
+}catch(e){
+console.log("Service worker update:",e);
+}
+});
+}
 </script>
+
 </body>
 </html>
